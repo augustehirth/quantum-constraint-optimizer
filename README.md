@@ -1,6 +1,7 @@
 # quantum_constraint_optimizer
 
-Quantum Constraint Optimizer
+Quantum Constraint Optimizer:
+
 A framework for representing quantum circuits in terms of variables in the Z3 solver. 
  - Handles conversion from Qiskit QuantumCircuits into an internal Circuit object, and conversion from the produced Z3 model back into Qiskit QuantumCircuits
  - The Circuit object has simple constraint generation built in, in order to preserve the legitimacy of the produced circuit. 
