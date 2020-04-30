@@ -17,13 +17,12 @@ def model_to_QuantumCircuit(model:ModelRef, circuit:Circuit) -> QuantumCircuit:
 
     # Bucket instructions into moments, where all instructions in a moment are run in parallel, on different qubits
     moments = defaultdict(set)
-    max_qind = 0
+    num_qubits = max(circuit.qubit_indices)+1
     for iid, timeslot in times.items():
         moments[timeslot].add((iid, on_indices[iid]))
-        max_qind = max(max_qind, *on_indices[iid])
     
     # Create a new QuantumCircuit and append new instructions into it, by moment order
-    qcircuit = QuantumCircuit(max_qind+1, max_qind+1)
+    qcircuit = QuantumCircuit(num_qubits, num_qubits)
     for timeslot in sorted(moments):
         moment = moments[timeslot]
         for iid, qubit_indices in moment:
@@ -45,7 +44,7 @@ def QuantumCircuit_to_Circuit(qiskit_circuit:QuantumCircuit) -> Circuit:
     # Append new instructions into the Circuit for each instruction in the QuantumCircuit
     for gate, qubits, cubits in qiskit_circuit: 
         qubit_indices = list(map(lambda x:x.index, reversed(qubits)))
-        circuit = circuit.append(gate.name, qubit_indices)
+        circuit = circuit.append(gate.name, qubit_indices, gate._params)
 
     # Return the new Circuit
     return circuit
@@ -63,11 +62,14 @@ def reliability_loader(filename:str):
             qid, t1, t2, freq, measure_err, u2_err, cx_errs, date = line
             qindex = int(qid[1:])
             reliabilities = defaultdict(float)
-            reliabilities["measure"+str(qindex)] = float(measure_err)
-            reliabilities["u2"+str(qindex)] = float(u2_err)
+            reliabilities["measure"+str(qindex)] = 1-float(measure_err)
+            reliabilities["id"+str(qindex)] = 1
+            reliabilities["u1"+str(qindex)] = 1
+            reliabilities["u2"+str(qindex)] = 1-float(u2_err)
+            reliabilities["u3"+str(qindex)] = (1-float(u2_err))**2
             for pair in cx_errs.split(","):
                 opid, reliability = pair.split(":")
-                reliability = float(reliability)
+                reliability = 1-float(reliability)
                 reliabilities[opid] = reliability
             all_reliabilities[qindex] = reliabilities
 

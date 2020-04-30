@@ -3,6 +3,7 @@ from z3 import Real
 from typing import Set, DefaultDict, Tuple, List
 from quantum_constraint_optimizer.datastructures.gate import Gate
 from itertools import chain
+from functools import reduce
 from collections import defaultdict
 
 class Qubit:
@@ -25,6 +26,9 @@ class Qubit:
     # Reliability of an  gate operation on this qubit, optionally with respect to another control qubit
     def reliability(self, gate: Gate, controls: Tuple[Qubit] = ()) -> Real:
         key = (gate.name, tuple(map(lambda x:x.index,controls)))
+        key = gate.name + str(self.index)
+        for control in controls:
+            key += "_" + str(control.index)
         return self.reliabilities.get(key, 0)
     
     def __repr__(self): return str(self)

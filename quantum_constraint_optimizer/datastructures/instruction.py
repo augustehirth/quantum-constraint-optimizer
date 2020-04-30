@@ -22,20 +22,22 @@ class Instruction:
         # Previous instructions in the dependency graph: those instrs that this one depends on
         self.prev : OrderedDict[int,Instruction] = prev
 
-        # Available Qubits, mapped from integers
+        # Available Qubits, mapped from their indices
         self.qubit_map: Dict[int, Qubit] = qubit_map
 
-        # Qubit Indicies applied to:
+        # Qubit indicies applied to:
+        # This is intuitively the primary mapping from "logical" indices to real ones. 
+        # The consistency over the entire graph is maintained by the constraints.
         self.on_indices: OrderedDict[int, Int] = OrderedDict([(edge,Int(self.name+".edge_"+str(edge))) for edge in prev.keys()])
-
-        # Other args like rotations: TODO
-        self.other_args: List = other_args
 
         # Time slot to run this instruction in
         self.time: Int = Int(self.name + ".timeslot")
 
         # Reliability of this instruction: depends on the operation and which qubit it's assigned to
         self.reliability: Real = Real(self.name + ".reliability")
+
+        # Other args like rotations: TODO
+        self.other_args: List = other_args
     
     def __str__(self):
         return str(self.name)
@@ -72,8 +74,7 @@ class Instruction:
             inds, qubits = zip(*tupl)
             # Condition: If the on_indices are in this exact configuration
             match = starmap(lambda on_index, qubit_index:on_index == qubit_index, zip(self.on_indices.values(), inds))
-            yield Implies(\
-                And(*match), \
+            yield Implies(And(*match), \
                 # Result: Then the reliability will be equal to the reliability of that gate on those qubits
                 self.reliability == qubits[0].reliability(self.gate, qubits[1:])
                 )
