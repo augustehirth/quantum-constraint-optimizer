@@ -20,7 +20,9 @@ def correctness(pre_circuit: QuantumCircuit, post_circuit: QuantumCircuit):
 #Compare prior Z3Circuit reliability with post Z3-produced model's reliability.
 def improved_reliability(m, s, qubit_reliabilities, pre_circuit):
     post_reliability = [m.evaluate(o).as_decimal(10) for o in s.objectives()]
-    post_reliability = round(-float(post_reliability[0][:-1]), 10)
+    post_reliability = post_reliability[0]
+    post_reliability = post_reliability[:-1] if post_reliability.endswith("?") else post_reliability
+    post_reliability = round(-float(post_reliability), 10)
     pre_reliability = calculate_z3_circuit_reliability(qubit_reliabilities, pre_circuit)
     print("Pre Reliability:\n" + str(pre_reliability))
     print("Post Reliability:\n" + str(post_reliability))

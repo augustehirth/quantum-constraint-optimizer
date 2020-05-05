@@ -7,7 +7,7 @@ from functools import reduce
 from collections import defaultdict
 
 class Qubit:
-    def __init__(self, name:str, index:int, reliabilities: DefaultDict[Tuple[Gate, Tuple[Qubit]],Real] = None):
+    def __init__(self, name:str, index:int, col:int, row:int, reliabilities: DefaultDict[Tuple[Gate, Tuple[Qubit]],Real] = None):
         #super().__init__()
 
         # A name for the qubit
@@ -15,6 +15,12 @@ class Qubit:
 
         # The qubit's numerical index
         self.index : int = index 
+
+        # The qubit's column index
+        self.col : int = col 
+
+        # The qubit's row index
+        self.row : int = row
 
         # Reliability data for each gate on this qubit
         #   map from supported_gates -> Real

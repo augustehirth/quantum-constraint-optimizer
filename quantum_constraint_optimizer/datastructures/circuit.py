@@ -1,10 +1,11 @@
 from __future__ import annotations
 from z3 import *
 from typing import List
-from collections import Iterable
 from quantum_constraint_optimizer.datastructures import Instruction, Qubit
 from quantum_constraint_optimizer.datastructures.gates import HGate, RGate, XGate, YGate, ZGate, U2Gate, CXGate, SwapGate, InGate, OutGate, MeasureGate
 from copy import copy
+from collections.abc import Iterable
+from itertools import combinations
 
 class Circuit:
     # our gate names, goal is to be above plus in, out, measure
@@ -131,7 +132,24 @@ class Circuit:
             yield from inst.constraints()
         
         # Assert circuit specific constraints
-        pass
+        def time_overlap(cx1, cx2):
+            return cx1.time == cx2.time 
+
+        def space_overlap(qid1, qid2, qid3, qid4):
+            c1, t1 = self.qubit_map[qid1], self.qubit_map[qid2]
+            r1cols = set(range(abs(c1.col - t1.col)+1))
+            r1rows = set(range(abs(c1.row - t1.row)+1))
+            c2, t2 = self.qubit_map[qid3], self.qubit_map[qid4]
+            r2cols = set(range(abs(c2.col - t2.col)+1))
+            r2rows = set(range(abs(c2.row - t2.row)+1))
+            return bool(r1cols.intersection(r2cols)) and bool(r1rows.intersection(r2rows))
+
+        for cx1, cx2 in combinations(filter(lambda x:x.gate.name == "cx", self.instructions.values()), 2):
+            for qid1, qid2, qid3, qid4 in combinations(self.qubit_indices, 4):
+                c1,t1 = cx1.on_indices.values()
+                c2,t2 = cx2.on_indices.values()
+                yield Implies(And(c1 == qid1, t1 == qid2, c2 == qid3, t2 == qid4), \
+                    Or(Not(time_overlap(cx1, cx2)), Not(space_overlap(qid1, qid2, qid3, qid4))))
             
     def __repr__(self):
         return str(self)

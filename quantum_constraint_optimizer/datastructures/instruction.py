@@ -51,8 +51,9 @@ class Instruction:
         # Assert that the instruction's time is greater than zero (the input instructions), for sanity
         yield self.time > 0
 
-        # Assert that reliability is nonnegative
-        yield self.reliability >= 0
+        # Assert that reliability is nonnegative for "real" operations
+        if self.gate.name not in {"in", "out"}:
+            yield self.reliability > 0
 
         # Assert that all assigned indices are actually available qubits
         for on_index in self.on_indices.values():

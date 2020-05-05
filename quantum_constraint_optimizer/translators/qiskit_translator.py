@@ -3,6 +3,7 @@ from qiskit import QuantumCircuit
 from quantum_constraint_optimizer.datastructures.circuit import Circuit
 from quantum_constraint_optimizer.datastructures import Qubit
 from collections import defaultdict
+from typing import Dict, Tuple
 from csv import reader
 
 # Turn z3 model back into a qiskit QuantumCircuit
@@ -37,9 +38,12 @@ def model_to_QuantumCircuit(model:ModelRef, circuit:Circuit) -> QuantumCircuit:
     # Return the new QuantumCircuit
     return qcircuit
 
-def QuantumCircuit_to_Circuit(qiskit_circuit:QuantumCircuit) -> Circuit:
+def QuantumCircuit_to_Circuit(qiskit_circuit:QuantumCircuit, reliabilities:Dict[int,Dict[str,float]], position_map:Dict[int, Tuple[int, int]]=None) -> Circuit:
     # Create a new Circuit with new Qubits which match the QuantumCircuit's indexes
-    circuit = Circuit([Qubit("q_"+str(index), index) for index in map(lambda x:x.index, qiskit_circuit.qubits)])
+    if position_map:
+        circuit = Circuit([Qubit("q_"+str(index), index, position_map[index][0], position_map[index][1], reliabilities[index]) for index in map(lambda x:x.index, qiskit_circuit.qubits)])
+    else:
+        circuit = Circuit([Qubit("q_"+str(index), index, index, index, reliabilities[index]) for index in map(lambda x:x.index, qiskit_circuit.qubits)])
 
     # Append new instructions into the Circuit for each instruction in the QuantumCircuit
     for gate, qubits, cubits in qiskit_circuit: 
