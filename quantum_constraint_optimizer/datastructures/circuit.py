@@ -2,14 +2,14 @@ from __future__ import annotations
 from z3 import *
 from typing import List
 from quantum_constraint_optimizer.datastructures import Instruction, Qubit
-from quantum_constraint_optimizer.datastructures.gates import HGate, RGate, XGate, YGate, ZGate, U2Gate, CXGate, SwapGate, InGate, OutGate, MeasureGate
+from quantum_constraint_optimizer.datastructures.gates import HGate, RGate, XGate, YGate, ZGate, U1Gate, U2Gate, U3Gate, CXGate, SwapGate, InGate, OutGate, MeasureGate
 from copy import copy
 from collections.abc import Iterable
 from itertools import combinations
 
 class Circuit:
     # our gate names, goal is to be above plus in, out, measure
-    gate_names = {"h":HGate, "r":RGate, "x":XGate, "y":YGate, "z":ZGate, "u2":U2Gate, "cx":CXGate, "swap":SwapGate, "in":InGate, "out":OutGate, "measure":MeasureGate}
+    gate_names = {"h":HGate, "r":RGate, "x":XGate, "y":YGate, "z":ZGate, "u1":U1Gate, "u2":U2Gate, "u3":U3Gate, "cx":CXGate, "swap":SwapGate, "in":InGate, "out":OutGate, "measure":MeasureGate}
 
     def __init__(self, qubits:List[Qubit]):
 
@@ -43,7 +43,7 @@ class Circuit:
             self.output_instructions[ind], self.instctr = next(OutGate.on(prev = {ind:in_ins}, qubit_map = self.qubit_map, instctr = self.instctr))
             #self.instctr = instctr
 
-    def append(self, gate:str, on_indices:List[int], other_args:List=[]) -> Circuit:
+    def append(self, gate_name:str, on_indices:List[int], other_args:List=[]) -> Circuit:
     
         # Hack to allow simpler append statements
         if not isinstance(on_indices, Iterable):
@@ -58,7 +58,12 @@ class Circuit:
         ret = copy(self)
 
         # Get the gate class from the qubit's name
-        gate = Circuit.gate_names.get(gate)
+        gate = Circuit.gate_names.get(gate_name)
+
+        if gate is None: 
+            if gate_name is "barrier": return ret
+            if gate_name is "id": return ret
+            raise Exception("Unsupported Gate: " + gate_name)
 
         # Get the most recently added instruction on each of those qubits
         prev = {index:ret.frontier.get(index) for index in on_indices}
@@ -144,6 +149,7 @@ class Circuit:
             r2rows = set(range(abs(c2.row - t2.row)+1))
             return bool(r1cols.intersection(r2cols)) and bool(r1rows.intersection(r2rows))
 
+        print("Yielding overlap constraints")
         for cx1, cx2 in combinations(filter(lambda x:x.gate.name == "cx", self.instructions.values()), 2):
             for qid1, qid2, qid3, qid4 in combinations(self.qubit_indices, 4):
                 c1,t1 = cx1.on_indices.values()

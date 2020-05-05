@@ -41,9 +41,9 @@ def model_to_QuantumCircuit(model:ModelRef, circuit:Circuit) -> QuantumCircuit:
 def QuantumCircuit_to_Circuit(qiskit_circuit:QuantumCircuit, reliabilities:Dict[int,Dict[str,float]], position_map:Dict[int, Tuple[int, int]]=None) -> Circuit:
     # Create a new Circuit with new Qubits which match the QuantumCircuit's indexes
     if position_map:
-        circuit = Circuit([Qubit("q_"+str(index), index, position_map[index][0], position_map[index][1], reliabilities[index]) for index in map(lambda x:x.index, qiskit_circuit.qubits)])
+        circuit = Circuit([Qubit("q_"+str(index), index, position_map[index][0], position_map[index][1], reliabilities[index]) for index in reliabilities.keys()])
     else:
-        circuit = Circuit([Qubit("q_"+str(index), index, index, index, reliabilities[index]) for index in map(lambda x:x.index, qiskit_circuit.qubits)])
+        circuit = Circuit([Qubit("q_"+str(index), index, index, index, reliabilities[index]) for index in reliabilities.keys()])
 
     # Append new instructions into the Circuit for each instruction in the QuantumCircuit
     for gate, qubits, cubits in qiskit_circuit: 
@@ -71,7 +71,7 @@ def reliability_loader(filename:str):
             reliabilities["u1"+str(qindex)] = 1
             reliabilities["u2"+str(qindex)] = 1-float(u2_err)
             reliabilities["u3"+str(qindex)] = (1-float(u2_err))**2
-            for pair in cx_errs.split(","):
+            for pair in cx_errs.split(", "):
                 opid, reliability = pair.split(":")
                 reliability = 1-float(reliability)
                 reliabilities[opid] = reliability
