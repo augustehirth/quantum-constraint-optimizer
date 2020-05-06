@@ -71,19 +71,25 @@ class Instruction:
             yield previnst.on_indices[prevind] == self.on_indices[prevind]
 
         print("Yielding reliability constraints")
+        count = 0
         # Assert that the reliability of this instruction is based on the qubit indices assigned. 
         for tupl in product(self.qubit_map.items(), repeat=len(self.prev)):
             inds, qubits = zip(*tupl)
             # Condition: If the on_indices are in this exact configuration
             match = starmap(lambda on_index, qubit_index:on_index == qubit_index, zip(self.on_indices.values(), inds))
+            count += 1
+            if count % 100000 == 0: print(str(count) + " constraints yielded")
             yield Implies(And(*match), \
                 # Result: Then the reliability will be equal to the reliability of that gate on those qubits
                 self.reliability == qubits[0].reliability(self.gate, qubits[1:])
                 )
 
         print("Yielding index constraints")
+        count = 0
         # Assert that the qubit indices that this instruction is applied to are different
         for onind1, onind2 in combinations(self.on_indices.values(), 2):
+            count += 1
+            if count % 100000 == 0: print(str(count) + " constraints yielded")
             yield Not(onind1 == onind2)
 
         # Assert that no non-Out instruction follows a measure

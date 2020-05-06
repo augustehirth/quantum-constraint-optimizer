@@ -150,10 +150,13 @@ class Circuit:
             return bool(r1cols.intersection(r2cols)) and bool(r1rows.intersection(r2rows))
 
         print("Yielding overlap constraints")
+        count = 0
         for cx1, cx2 in combinations(filter(lambda x:x.gate.name == "cx", self.instructions.values()), 2):
             for qid1, qid2, qid3, qid4 in combinations(self.qubit_indices, 4):
                 c1,t1 = cx1.on_indices.values()
                 c2,t2 = cx2.on_indices.values()
+                count += 1
+                if count % 100000 == 0: print(str(count) + " constraints yielded")
                 yield Implies(And(c1 == qid1, t1 == qid2, c2 == qid3, t2 == qid4), \
                     Or(Not(time_overlap(cx1, cx2)), Not(space_overlap(qid1, qid2, qid3, qid4))))
             

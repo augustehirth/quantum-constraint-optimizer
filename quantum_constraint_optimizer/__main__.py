@@ -24,7 +24,7 @@ precirc.measure(2,2)
 precirc.measure(4,4)
 
 def test(qcirc):
-    print(qcirc)
+    #print(qcirc)
     print("Translate to Z3")
     circ = QuantumCircuit_to_Circuit(qcirc, melbourne_rels, positions)
     # Collect Constraints
@@ -57,7 +57,7 @@ def test(qcirc):
     # Translate to qiskit QuantumCircuit
     print("Translate to Qiskit")
     rcirc = model_to_QuantumCircuit(m, circ)
-    print(rcirc)
+    #print(rcirc)
     #improved_reliability(m,s,melbourne_rels, rcirc)
 
 #test(precirc)

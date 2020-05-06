@@ -41,9 +41,9 @@ def model_to_QuantumCircuit(model:ModelRef, circuit:Circuit) -> QuantumCircuit:
 def QuantumCircuit_to_Circuit(qiskit_circuit:QuantumCircuit, reliabilities:Dict[int,Dict[str,float]], position_map:Dict[int, Tuple[int, int]]=None) -> Circuit:
     # Create a new Circuit with new Qubits which match the QuantumCircuit's indexes
     if position_map:
-        circuit = Circuit([Qubit("q_"+str(index), index, position_map[index][0], position_map[index][1], reliabilities[index]) for index in reliabilities.keys()])
+        circuit = Circuit([Qubit("q_"+str(index), index, col=position_map[index][0], row=position_map[index][1], reliabilities=reliabilities[index]) for index in reliabilities.keys()])
     else:
-        circuit = Circuit([Qubit("q_"+str(index), index, index, index, reliabilities[index]) for index in reliabilities.keys()])
+        circuit = Circuit([Qubit("q_"+str(index), index, row=index, col=index, reliabilities=reliabilities[index]) for index in reliabilities.keys()])
 
     # Append new instructions into the Circuit for each instruction in the QuantumCircuit
     for gate, qubits, cubits in qiskit_circuit: 
