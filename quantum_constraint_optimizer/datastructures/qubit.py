@@ -7,7 +7,7 @@ from functools import reduce
 from collections import defaultdict
 
 class Qubit:
-    def __init__(self, name:str, index:int, reliabilities: DefaultDict[Tuple[Gate, Tuple[Qubit]],Real] = None, **kwargs):
+    def __init__(self, name:str, index:int, reliabilities: DefaultDict[str,float], **kwargs):
         #super().__init__()
 
         # A name for the qubit
@@ -30,7 +30,7 @@ class Qubit:
         self.supported_gates : Set[Gate] = self.reliabilities.keys() 
 
     # Reliability of an  gate operation on this qubit, optionally with respect to another control qubit
-    def reliability(self, gate: Gate, controls: Tuple[Qubit] = ()) -> Real:
+    def reliability(self, gate: Gate, controls: Iterable[Qubit] = ()) -> float:
         key = (gate.name, tuple(map(lambda x:x.index,controls)))
         key = gate.name + str(self.index)
         for control in controls:

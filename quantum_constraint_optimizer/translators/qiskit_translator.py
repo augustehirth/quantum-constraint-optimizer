@@ -12,9 +12,15 @@ def model_to_QuantumCircuit(model:ModelRef, circuit:Circuit) -> QuantumCircuit:
     # Sort timing and qubit variables into separate dicts
     times = {}
     on_indices = {}
+    qubit_remap = {}
     for inst in circuit.instructions.values():
+        if inst.gate.name != "measure":
+            continue
         times[inst.name] = model[inst.time].as_long()
-        on_indices[inst.name] = tuple(model[on_index].as_long() for on_index in inst.on_indices.values())
+        on_indices[inst.name] = tuple(model[on_edge].as_long() for on_edge in inst.on_indices.values())
+        cp = qubit_remap.copy()
+        qubit_remap.update(dict(zip(on_indices[inst.name], inst.on_indices.keys())))
+        assert all(qubit_remap[key] == cp[key] for key in cp.keys())
 
     # Bucket instructions into moments, where all instructions in a moment are run in parallel, on different qubits
     moments = defaultdict(set)
@@ -31,12 +37,13 @@ def model_to_QuantumCircuit(model:ModelRef, circuit:Circuit) -> QuantumCircuit:
             if iname in ["in", "out"]: continue
             if iname == "measure":
                 qcircuit.measure(*qubit_indices, *qubit_indices)
+                assert all(x in qubit_remap.keys() for x in qubit_indices)
                 continue
             other_arguments = circuit.instructions[iid].other_args
             getattr(qcircuit, iname)(*other_arguments, *reversed(qubit_indices))
 
     # Return the new QuantumCircuit
-    return qcircuit
+    return qcircuit, qubit_remap
 
 def QuantumCircuit_to_Circuit(qiskit_circuit:QuantumCircuit, reliabilities:Dict[int,Dict[str,float]], position_map:Dict[int, Tuple[int, int]]=None) -> Circuit:
     # Create a new Circuit with new Qubits which match the QuantumCircuit's indexes
